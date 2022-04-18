@@ -18,14 +18,35 @@ enum Option<T>{
     None
 }
 
+enum Sex{
+    male,
+    feemale,
+    russian,
+    other
+}
+
+enum Department{
+    developer,
+    admin,
+    engineering,
+    accountant
+}
+
+struct Employee{
+    name: String,
+    sex: Sex,
+    vaccine: bool,
+    education: String,
+    age: u8,
+    department: Department,
+    chief: bool
+}
+
 fn main() {
     println!("\n{headline:>width$}\n", headline = "---Wellcome to sky-armor---", width=60);
-
-    
-
-
+    let com = format!("Enter command (to get instructions enter {0}help{0}): ", QUOT);
     'menu: loop{
-        let command = enter_data().turn_command();
+        let command = enter_string(&com).turn_command();
         match command{
             Command::help => {help(); continue 'menu},
             Command::add_empl => add_empl(),
@@ -37,6 +58,122 @@ fn main() {
         }
     }
 
+}
+
+
+fn add_empl(){
+    println!("      Adding new employee: ");
+    let mut sex_counter = 0; 
+
+    let X = Employee{
+        name: {
+            'enter_name: loop{
+                match enter_string("Name: "){
+                    Option::Some(emp_name) => break 'enter_name emp_name,
+                    Option::None => {println!("Enter name!"); continue 'enter_name}
+                }
+            }
+        },
+        sex:{
+            'enter_sex: loop{
+                match enter_string("Sex: "){
+                    Option::Some(emp_sex) => {
+                        match emp_sex.trim(){
+                            "male" => break 'enter_sex Sex::male,
+                            "feemale" => break 'enter_sex Sex::feemale,
+                            "russian" => break 'enter_sex Sex::russian,
+                            _=> {
+                                if sex_counter == 3{
+                                    println!("You are a fucking foodie!"); break 'enter_sex Sex::other
+                                }
+                                else{
+                                    sex_counter+=1;
+                                    println!("Enter the normal sex!"); continue 'enter_sex                                 
+                                }                               
+                            }
+                        }
+                    },
+                    Option::None => {println!("Enter sex!"); continue 'enter_sex}
+                }
+            }
+        },
+        vaccine:{
+            'enter_vaccine: loop{
+                match enter_string("vaccine (true or false): "){
+                    Option::Some(emp_vaccine) => {
+                        match emp_vaccine.trim(){
+                            "true"=> break 'enter_vaccine true,
+                            "false" => break 'enter_vaccine false,
+                            _=> {println!("You need to enter {0}true{0} or {0}false{0}", QUOT); continue 'enter_vaccine}
+                        }
+
+                    }
+                    Option::None => {println!("Enter {0}true{0} or {0}false{0}!", QUOT); continue 'enter_vaccine}
+                }
+            }
+        },
+        education:{
+            'enter_education: loop{
+                match enter_string("Education: "){
+                    Option::Some(emp_education) => break 'enter_education emp_education,
+                    Option::None => {println!("Enter something about education!"); continue 'enter_education}
+                }
+            }
+        },
+        age:{                                               
+            'enter_age: loop{
+                match enter_string("Education: "){
+                    Option::Some(emp_ege) => {
+                        match emp_ege.trim().parse(){                                       //Указываем неявно тип, к которому парсим???
+                            Result::Ok(emp_ege) => break 'enter_age emp_ege,
+                            Result::Err(message) => {println!("Enter the quess! {}", message); continue 'enter_age}
+                        }
+                    },
+                    Option::None => {println!("Enter the age!"); continue 'enter_age}
+                }
+            }
+        },
+        department:{
+            'enter_department: loop{
+                match enter_string("Department (developer / admin / engineering / accountant): "){
+                    Option::Some(emp_dep) => {
+                        match emp_dep.trim(){
+                            "developer" => break 'enter_department Department::developer,
+                            "admin" => break 'enter_department Department::admin,
+                            "engineering" => break 'enter_department Department::engineering,
+                            "accountant" => break 'enter_department Department::accountant,
+                            _=> {
+                                    println!("Enter one of the departments!"); continue 'enter_department                                                          
+                            }
+                        }
+                    },
+                    Option::None => {println!("The employe couldn't be without own department!"); continue 'enter_department}
+                }
+            }
+        },
+        chief:{
+            'enter_chief: loop{
+                match enter_string("Chief? (true or false): "){
+                    Option::Some(emp_chief) => {
+                        match emp_chief.trim(){
+                            "true"=> {
+                                //break 'enter_chief true
+                            },
+                            "false" => break 'enter_chief false,
+                            _=> {println!("You need to enter {0}true{0} or {0}false{0}", QUOT); continue 'enter_chief}
+                        }
+
+                    }
+                    Option::None => {println!("Enter the employee status"); continue 'enter_chief}
+                }
+            }
+        }
+
+        
+
+
+    };
+    
 }
 
 
@@ -62,16 +199,16 @@ impl Option<String>{
     }
 }
 
-fn enter_data() -> Option<String>{
-    let mut user_command = String::new();
-    println!("Enter command (for inquiry enter {0}help{0}): ", QUOT);
-    io::stdin().read_line(&mut user_command).expect("Something wrong with OS std:in");
+fn enter_string(parametr: &str) -> Option<String>{
+    let mut user_data = String::new();
+    println!("{}", parametr);
+    io::stdin().read_line(&mut user_data).expect("Something wrong with OS std:in");
 
-    user_command = user_command.trim().to_string();
+    user_data = user_data.trim().to_string();
 
-    match user_command.is_empty(){
+    match user_data.is_empty(){
         true => Option::None,
-        false => Option::Some(user_command),
+        false => Option::Some(user_data),
     }
 }
 
@@ -86,9 +223,7 @@ fn help(){
 }
 
 
-fn add_empl(){
-println!("add_empl funktion");
-}
+
 
 
 fn rem_empl(){
