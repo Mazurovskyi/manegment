@@ -59,7 +59,7 @@ fn main() {
         match command{
             Command::help => {help(); continue 'menu},
             Command::add_empl => add_empl(&mut employee_vect),
-            Command::rem_empl => rem_empl(),
+            Command::rem_empl => rem_empl(&mut employee_vect),
             Command::rebase_empl => rebase_empl(),
             Command::show_empl_dep => show_empl_dep(),
             Command::unknown => {println!("\nUnknown command! Try to enter again or use {0}help{0} to get instructions", QUOT); continue 'menu },
@@ -265,7 +265,15 @@ fn new_employee()-> Employee{
     }
 }
 
-
+fn find_the_name(employee_vect: &mut Vec<Employee>, user_name: &String) -> bool{
+let mut result = false;
+    for worker in employee_vect{
+        if worker.name == *user_name{
+            result = true
+        }
+    }
+    result
+}
 
 
 
@@ -274,8 +282,44 @@ fn new_employee()-> Employee{
 
 // ---commands in line---
 
-fn rem_empl(){
-    println!("rem_empl funktion");
+fn rem_empl(employee_vect: &mut Vec<Employee>){
+    println!("\n      Removing the employee");
+    'removing: loop{
+        match enter_string("Enter the name of employee:"){
+            Option::Some(user_name) => {
+
+                match find_the_name(employee_vect, &user_name){
+                    true => {
+
+                    },
+                    false => {
+                        'removing_inner: loop{
+                            let message = format!("There are no employees like {0}! Do you want to open the base? ({1}Yes{1} or {1}no{1})", user_name, QUOT);
+                            match enter_string(&message){
+                                Option::Some(command) => {
+                                    match command.trim(){
+                                        "yes" => show_empl_dep(),
+                                        "no" => continue 'removing,
+                                        _=> {println!("Please, enter {0}Yes{0} or {0}no{0}!", QUOT); continue 'removing_inner}
+                                    }
+                                },
+                                Option::None => continue 'removing_inner
+                            }
+                            continue 'removing
+                        }
+                    }
+                }
+
+
+
+
+            }
+            Option::None => {println!("Enter the name!"); continue 'removing}
+        }
+    }
+
+
+    
 }
 
 fn rebase_empl(){
