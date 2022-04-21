@@ -127,7 +127,6 @@ fn help(){
 
 fn find_the_chief(employee_vect: &mut Vec<Employee>, new_employee: &Employee)-> bool{
     let mut val: bool = true;
-    println!("find_the_chief");
     
     for worker in employee_vect{      
         if discriminant(&worker.department) == discriminant(&new_employee.department){
@@ -265,17 +264,26 @@ fn new_employee()-> Employee{
     }
 }
 
-fn find_the_name(employee_vect: &mut Vec<Employee>, user_name: &String) -> bool{
-let mut result = false;
+fn find_the_name(employee_vect: &mut Vec<Employee>, user_name: &String) -> Option<String>{
+let mut result: Option<String> = Option::None;
+
     for worker in employee_vect{
         if worker.name == *user_name{
-            result = true
+            result = Option::Some(worker.name.clone())
         }
     }
     result
 }
 
-
+fn delete_element(employee_vect: &mut Vec<Employee>, worker: &String){
+    let mut i = 0;
+    for el in employee_vect{
+        if el.name == *worker{
+            employee_vect.swap_remove(i);
+        }
+        i+=1;
+    }
+}
 
 
 
@@ -288,11 +296,13 @@ fn rem_empl(employee_vect: &mut Vec<Employee>){
         match enter_string("Enter the name of employee:"){
             Option::Some(user_name) => {
 
-                match find_the_name(employee_vect, &user_name){
-                    true => {
 
+
+                match find_the_name(employee_vect, &user_name){
+                    Option::Some(worker) => {
+                        delete_element(employee_vect, &worker);
                     },
-                    false => {
+                    Option::None => {
                         'removing_inner: loop{
                             let message = format!("There are no employees like {0}! Do you want to open the base? ({1}Yes{1} or {1}no{1})", user_name, QUOT);
                             match enter_string(&message){
