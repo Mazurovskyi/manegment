@@ -62,7 +62,7 @@ fn main() {
             Command::rem_empl => rem_empl(),
             Command::rebase_empl => rebase_empl(),
             Command::show_empl_dep => show_empl_dep(),
-            Command::unknown => {println!("\nUnknown command! Try to enter one more or use {0}help{0} to get instructions", QUOT); continue 'menu },
+            Command::unknown => {println!("\nUnknown command! Try to enter again or use {0}help{0} to get instructions", QUOT); continue 'menu },
             Command::empty => {println!("\nEnter the command or use {0}help{0} to get instructions", QUOT); continue 'menu }
         }
     }
@@ -70,22 +70,16 @@ fn main() {
 }
 
 
-fn add_empl(employee_vect: &mut Vec<Employee>){
-    println!("      Adding new employee: ");
 
-    let mut val: bool = true;
+
+// ---main commands---
+
+fn add_empl(employee_vect: &mut Vec<Employee>){
+    println!("\n      Adding new employee: ");
     
     let mut new_employee = new_employee();
 
-    for worker in employee_vect{
-        if discriminant(&worker.department) == discriminant(&new_employee.department){
-            if worker.chief == true{                                
-                val = false
-            }                           
-        }
-    }
-
-    //employee_vect.push(new_employee); 
+    let val = find_the_chief(employee_vect, &new_employee);
 
     match val{
         true => {
@@ -116,12 +110,68 @@ fn add_empl(employee_vect: &mut Vec<Employee>){
             }
         }
         false => employee_vect.push(new_employee)
-    }
-    
+    }   
 }
 
+fn help(){
+    println!("\n{headline:>width$}", headline = "---Available commands---", width=59);
+    println!("{el1} - add new employee;\r\n{el2} - remove an employee;\r\n{el3} - rebase an employee to another department;\r\n{el4} - find an employee from own department;\r\n{el5} - get information about avallible commands;\r\n", 
+            el1 = "add_empl", 
+            el2 = "rem_empl", 
+            el3 = "rebase_empl", 
+            el4 = "show_empl_dep", 
+            el5 = "help");
+}
 
+// ---subsidiary commands---
 
+fn find_the_chief(employee_vect: &mut Vec<Employee>, new_employee: &Employee)-> bool{
+    let mut val: bool = true;
+    println!("find_the_chief");
+    
+    for worker in employee_vect{      
+        if discriminant(&worker.department) == discriminant(&new_employee.department){
+            if worker.chief == true{                                
+                val = false
+            }                           
+        }
+    }
+    val
+}
+
+impl Option<String>{
+
+    fn turn_command(self) -> Command{
+
+        match self{
+            Option::Some(user_value) => {
+
+                match user_value.trim(){
+                    "help" => Command::help,               
+                    "add_empl" => Command::add_empl,
+                    "rem_empl" => Command::rem_empl,
+                    "rebase_empl" => Command::rebase_empl,
+                    "show_empl_dep" => Command::show_empl_dep,              
+                    _=> Command::unknown
+                }
+            },
+            Option::None => Command::empty
+        }
+    }
+}
+
+fn enter_string(parametr: &str) -> Option<String>{
+    let mut user_data = String::new();
+    println!("{}", parametr);
+    io::stdin().read_line(&mut user_data).expect("Something wrong with OS std:in");
+
+    user_data = user_data.trim().to_string();
+
+    match user_data.is_empty(){
+        true => Option::None,
+        false => Option::Some(user_data),
+    }
+}
 
 fn new_employee()-> Employee{
     let mut sex_counter = 0;
@@ -182,7 +232,7 @@ fn new_employee()-> Employee{
         },
         age:{                                               
             'enter_age: loop{
-                match enter_string("Education: "){
+                match enter_string("Age: "){      
                     Option::Some(emp_ege) => {
                         match emp_ege.trim().parse(){                                       //компилятор знает к какому типу парсить????
                             Result::Ok(emp_ege) => break 'enter_age emp_ege,
@@ -221,59 +271,8 @@ fn new_employee()-> Employee{
 
 
 
-impl Option<String>{
 
-    fn turn_command(self) -> Command{
-
-        match self{
-            Option::Some(user_value) => {
-
-                match user_value.trim(){
-                    "help" => Command::help,               
-                    "add_empl" => Command::add_empl,
-                    "rem_empl" => Command::rem_empl,
-                    "rebase_empl" => Command::rebase_empl,
-                    "show_empl_dep" => Command::show_empl_dep,              
-                    _=> Command::unknown
-                }
-            },
-            Option::None => Command::empty
-        }
-    }
-}
-
-fn enter_string(parametr: &str) -> Option<String>{
-    let mut user_data = String::new();
-    println!("{}", parametr);
-    io::stdin().read_line(&mut user_data).expect("Something wrong with OS std:in");
-
-    user_data = user_data.trim().to_string();
-
-    match user_data.is_empty(){
-        true => Option::None,
-        false => Option::Some(user_data),
-    }
-}
-
-fn help(){
-    println!("\n{headline:>width$}", headline = "---Available commands---", width=59);
-    println!("{el1} - add new employee;\r\n{el2} - remove an employee;\r\n{el3} - rebase an employee to another department;\r\n{el4} - find an employee from own department;\r\n{el5} - get information about avallible commands;\r\n", 
-            el1 = "add_empl", 
-            el2 = "rem_empl", 
-            el3 = "rebase_empl", 
-            el4 = "show_empl_dep", 
-            el5 = "help");
-}
-
-
-
-
-
-
-
-
-
-
+// ---commands in line---
 
 fn rem_empl(){
     println!("rem_empl funktion");
@@ -282,7 +281,6 @@ fn rem_empl(){
 fn rebase_empl(){
     println!("rebase_empl funktion");
 }
-
 
 fn show_empl_dep(){
     println!("show_empl_dep funktion");
