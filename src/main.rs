@@ -61,15 +61,13 @@ fn main() {
             Command::add_empl => add_empl(&mut employee_vect),
             Command::rem_empl => rem_empl(&mut employee_vect),
             Command::rebase_empl => rebase_empl(),
-            Command::show_empl_dep => show_empl_dep(),
+            Command::show_empl_dep => show_empl_dep(&employee_vect),
             Command::unknown => {println!("\nUnknown command! Try to enter again or use {0}help{0} to get instructions", QUOT); continue 'menu },
             Command::empty => {println!("\nEnter the command or use {0}help{0} to get instructions", QUOT); continue 'menu }
         }
     }
 
 }
-
-
 
 
 // ---main commands---
@@ -121,6 +119,73 @@ fn help(){
             el3 = "rebase_empl", 
             el4 = "show_empl_dep", 
             el5 = "help");
+}
+
+fn rem_empl(employee_vect: &mut Vec<Employee>){
+    println!("\n      Removing the employee");
+    'removing: loop{
+        match enter_string("Enter the name of employee to remove:"){
+            Option::Some(user_name) => {
+
+
+
+                match find_the_name(employee_vect, &user_name){
+                    Option::Some(worker) => {
+                        delete_element(employee_vect, &worker);
+                        break 'removing
+                    },
+                    Option::None => {
+                        'removing_inner: loop{
+                            let message = format!("There are no employees like {1}{0}{1}! Do you want to open the base? ({1}yes{1} or {1}no{1})", user_name, QUOT);
+                            match enter_string(&message){
+                                Option::Some(command) => {
+                                    match command.trim(){
+                                        "yes" => show_empl_dep(employee_vect),
+                                        "no" => continue 'removing,
+                                        _=> {println!("Please, enter {0}Yes{0} or {0}no{0}!", QUOT); continue 'removing_inner}
+                                    }
+                                },
+                                Option::None => continue 'removing_inner
+                            }
+                            continue 'removing
+                        }
+                    }
+                }
+
+
+
+
+            }
+            Option::None => {println!("Enter the name!"); continue 'removing}
+        }
+    }
+
+
+    
+}
+
+fn show_empl_dep(employee_vect: &Vec<Employee>){
+    println!("      Employee base");
+    let message = format!("Enter the department name or {0}all{0} to see all employees:", QUOT);
+
+    'show_empl: loop{
+        match enter_string(&message){
+            Option::Some(user_data) => {
+
+                match user_data.trim(){
+                    "developer" => {show_data(&Department::developer, employee_vect); break 'show_empl},
+                    "admin" => {show_data(&Department::admin, employee_vect); break 'show_empl},
+                    "engineering" => {show_data(&Department::engineering, employee_vect); break 'show_empl},
+                    "accountant" => {show_data(&Department::accountant, employee_vect); break 'show_empl},
+                    "all" => show_data_all(employee_vect),
+                    _=> {println!("Please, choose one of the commands"); continue 'show_empl}
+                }
+
+
+            },
+            Option::None => {println!("Enter the comand!"); continue 'show_empl}
+        }
+    }
 }
 
 // ---subsidiary commands---
@@ -277,68 +342,79 @@ let mut result: Option<String> = Option::None;
 
 fn delete_element(employee_vect: &mut Vec<Employee>, worker: &String){
     let mut i = 0;
-    for el in employee_vect{
-        if el.name == *worker{
-            employee_vect.swap_remove(i);
+
+    let mut iter = employee_vect.iter();
+
+    'internal: loop{
+        match iter.next(){
+            Some(value) => {
+
+                if value.name == *worker{
+                    break 'internal
+                }  
+                i+=1; 
+
+            },
+            None => break 'internal,
         }
-        i+=1;
     }
+
+    employee_vect.swap_remove(i);
+    println!("Successfully! Employee was removed\n");
 }
 
+fn show_data(department: &Department, employee_vect: &Vec<Employee>){
 
+    println!("      {:?} department:\n", department);
 
+    let mut employee_list = Vec::new();
+    for worker in employee_vect{
+        if discriminant(&worker.department) == discriminant(department){
+            employee_list.push(worker);
+        }
+    }
+
+    if employee_list.is_empty(){
+        println!("There are no any employee in {:?}", department);
+    }
+    else{
+        for el in employee_list{
+            dbg!(&el);
+            println!("\n");
+        }
+    }
+    
+}
+
+fn show_data_all(employee_vect: &Vec<Employee>){
+
+    println!("      All employees:\n");
+
+    let mut employee_list = Vec::new();
+    for worker in employee_vect{   
+        employee_list.push(worker);
+    }
+
+    if employee_list.is_empty(){
+        println!("There are no any employees");
+    }
+    else{
+        for el in employee_list{
+            dbg!(&el);
+            println!("\n");
+        }
+    }
+    
+}
 
 // ---commands in line---
 
-fn rem_empl(employee_vect: &mut Vec<Employee>){
-    println!("\n      Removing the employee");
-    'removing: loop{
-        match enter_string("Enter the name of employee:"){
-            Option::Some(user_name) => {
-
-
-
-                match find_the_name(employee_vect, &user_name){
-                    Option::Some(worker) => {
-                        delete_element(employee_vect, &worker);
-                    },
-                    Option::None => {
-                        'removing_inner: loop{
-                            let message = format!("There are no employees like {0}! Do you want to open the base? ({1}Yes{1} or {1}no{1})", user_name, QUOT);
-                            match enter_string(&message){
-                                Option::Some(command) => {
-                                    match command.trim(){
-                                        "yes" => show_empl_dep(),
-                                        "no" => continue 'removing,
-                                        _=> {println!("Please, enter {0}Yes{0} or {0}no{0}!", QUOT); continue 'removing_inner}
-                                    }
-                                },
-                                Option::None => continue 'removing_inner
-                            }
-                            continue 'removing
-                        }
-                    }
-                }
-
-
-
-
-            }
-            Option::None => {println!("Enter the name!"); continue 'removing}
-        }
-    }
-
-
-    
-}
 
 fn rebase_empl(){
     println!("rebase_empl funktion");
 }
 
-fn show_empl_dep(){
-    println!("show_empl_dep funktion");
-}
+
 
 
 
