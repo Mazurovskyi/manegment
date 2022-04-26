@@ -1,5 +1,4 @@
 use std::io;
-use std::collections::HashMap;
 use std::mem::discriminant;
 
 const QUOT: char = '"';
@@ -57,9 +56,7 @@ fn main() {
     println!("\n{headline:>width$}\n", headline = "---Wellcome to sky-armor---", width=60);
     let com = format!("Enter command (to get instructions enter {0}help{0}): ", QUOT);
 
-
     let mut employee_vect: Vec<Employee> = Vec::new();
-
 
     'menu: loop{
         let command = enter_string(&com).turn_command();
@@ -75,7 +72,6 @@ fn main() {
     }
 
 }
-
 
 // ---main commands---
 
@@ -184,13 +180,108 @@ fn show_empl_dep(employee_vect: &Vec<Employee>){
                     "admin" => {show_data(&Department::admin, employee_vect); break 'show_empl},
                     "engineering" => {show_data(&Department::engineering, employee_vect); break 'show_empl},
                     "accountant" => {show_data(&Department::accountant, employee_vect); break 'show_empl},
-                    "all" => show_data_all(employee_vect),
+                    "all" => {show_data_all(employee_vect); break 'show_empl},
                     _=> {println!("Please, choose one of the commands"); continue 'show_empl}
                 }
 
 
             },
             Option::None => {println!("Enter the comand!"); continue 'show_empl}
+        }
+    }
+}
+
+fn rebase_empl(employee_vect: &mut Vec<Employee>){
+    println!("\n      Rebasing the Employee\n");
+    let message = format!("Enter {0}add <employee_name> to <department>{0}", QUOT);
+
+let data_to_rebase = 'enter_data_rebase: loop{
+    match enter_string(&message){
+        Option::Some(mut user_data) => {
+
+            let employee_name = match get_employee_name(& mut user_data){
+                Option::Some(employee_name) => {
+                    if employee_name.is_empty(){
+                        {println!("Enter the employee name!"); continue 'enter_data_rebase}
+                    }
+                    else{
+                        match find_the_name(employee_vect, &employee_name){
+                            Option::Some(employee_name) => employee_name,
+                            Option::None => {
+                                let message = format!("There are no any emplyees like {0}{1}{0}! Do you want to open the base? ({0}yes{0} or {0}no{0})", QUOT, employee_name);
+                                'rebasing_inner: loop {
+                                    match enter_string(&message){
+                                        Option::Some(command) => {
+                                            match command.trim(){
+                                                "yes" => {show_empl_dep(employee_vect); continue 'enter_data_rebase},
+                                                "no" => continue 'enter_data_rebase,
+                                                _=> {println!("Please, enter {0}Yes{0} or {0}no{0}!", QUOT); continue 'rebasing_inner}
+                                            }
+                                        },
+                                        Option::None => continue 'rebasing_inner
+                                    }
+                                }
+                                
+                            }
+                        }
+                    }
+                },
+                Option::None => {println!("The command should looks like {0}add <employee_name> to <department>{0}!", QUOT); continue 'enter_data_rebase}
+            };
+        
+            let employee_department = match get_employee_department(& mut user_data){
+                Option::Some(employee_department) => {
+                    if employee_department.is_empty(){
+                        {println!("Enter the employee department!"); continue 'enter_data_rebase}
+                    }
+                    else{
+                        match find_the_department(&employee_department){
+                            Option::Some(employee_department) => employee_department,
+                            Option::None => {
+                                let message = format!("There are no such departments like {0}{1}{0}! Do you want to open the base? ({0}yes{0} or {0}no{0})", QUOT, employee_department);
+                                'rebasing_inner2: loop {
+                                    match enter_string(&message){
+                                        Option::Some(command) => {
+                                            match command.trim(){
+                                                "yes" => {show_departments(); continue 'enter_data_rebase},
+                                                "no" => continue 'enter_data_rebase,
+                                                _=> {println!("Please, enter {0}Yes{0} or {0}no{0}!", QUOT); continue 'rebasing_inner2}
+                                            }
+                                        },
+                                        Option::None => continue 'rebasing_inner2
+                                    }
+                                }
+                                continue 'enter_data_rebase
+                            }
+                        }
+                    }
+                },
+                Option::None => {println!("The command should looks like {0}add <employee_name> to <department>{0}!", QUOT); continue 'enter_data_rebase}
+            };
+
+            let data_to_rebase = Data_to_rebase{
+                name: employee_name,
+                department: employee_department
+            };
+            dbg!(&data_to_rebase);
+            break 'enter_data_rebase data_to_rebase
+        },
+        Option::None => {println!("Enter something!"); continue 'enter_data_rebase} 
+    }
+};
+
+    let mut iterator = employee_vect.iter_mut();
+
+    'find_empl_to_rebase: loop{
+        match iterator.next(){
+            Some(worker) =>{
+                if worker.name == data_to_rebase.name{     
+                    println!("Success! The emplyee {0}{1}{0} was rebased from {0}{3:#?}{0} to {0}{2:#?}{0}.", QUOT, data_to_rebase.name, data_to_rebase.department ,worker.department);
+                    worker.department = data_to_rebase.department;                   
+                    break 'find_empl_to_rebase
+                }
+            },
+            None => break 'find_empl_to_rebase
         }
     }
 }
@@ -406,8 +497,8 @@ fn show_data_all(employee_vect: &Vec<Employee>){
         println!("There are no any employees");
     }
     else{
-        for el in employee_list{
-            dbg!(&el);
+        for employee in employee_list{
+            dbg!(&employee);
             println!("\n");
         }
     }
@@ -460,90 +551,9 @@ fn find_the_department(employee_department: &String) -> Option<Department>{
     }
 }
 
-
-
-// ---commands in line---
-
-
-fn rebase_empl(employee_vect: &mut Vec<Employee>){
-    println!("\n      Rebasing the Employee\n");
-    let message = format!("Enter {0}add <employee_name> to <department>{0}", QUOT);
-
-let data_to_rebase = 'enter_data_rebase: loop{
-    match enter_string(&message){
-        Option::Some(mut user_data) => {
-
-            let employee_name = match get_employee_name(& mut user_data){
-                Option::Some(employee_name) => {
-                    if employee_name.is_empty(){
-                        {println!("Enter the employee name!"); continue 'enter_data_rebase}
-                    }
-                    else{
-                        match find_the_name(employee_vect, &employee_name){
-                            Option::Some(employee_name) => employee_name,
-                            Option::None => {println!("There are no any emplyees like {0}{1}{0}! Try again", QUOT, employee_name); continue 'enter_data_rebase}
-                        }
-                    }
-                },
-                Option::None => {println!("The command should looks like {0}add <employee_name> to <department>{0}!", QUOT); continue 'enter_data_rebase}
-            };
-        
-            let employee_department = match get_employee_department(& mut user_data){
-                Option::Some(employee_department) => {
-                    if employee_department.is_empty(){
-                        {println!("Enter the employee department!"); continue 'enter_data_rebase}
-                    }
-                    else{
-                        match find_the_department(&employee_department){
-                            Option::Some(employee_department) => employee_department,
-                            Option::None => {println!("There are no such departments like {0}{1}{0}! Try again", QUOT, employee_department); continue 'enter_data_rebase}
-                        }
-                    }
-                },
-                Option::None => {println!("The command should looks like {0}add <employee_name> to <department>{0}!", QUOT); continue 'enter_data_rebase}
-            };
-
-            let data_to_rebase = Data_to_rebase{
-                name: employee_name,
-                department: employee_department
-            };
-            dbg!(&data_to_rebase);
-            break 'enter_data_rebase data_to_rebase
-        },
-        Option::None => {println!("Enter something!"); continue 'enter_data_rebase} 
-    }
-};
-
-    let mut iterator = employee_vect.iter_mut();
-
-    'find_empl_to_rebase: loop{
-        match iterator.next(){
-            Some(worker) =>{
-                if worker.name == data_to_rebase.name{     
-                    println!("Success! The emplyee {0}{1}{0} was rebased from {0}{3:#?}{0} to {0}{2:#?}{0}.", QUOT, data_to_rebase.name, data_to_rebase.department ,worker.department);
-                    worker.department = data_to_rebase.department;                   
-                    break 'find_empl_to_rebase
-                }
-            },
-            None => break 'find_empl_to_rebase
-        }
-    }
+fn show_departments(){
+    println!("\n      Departments: \n");
+    println!("- developer\r\n- admin\r\n- engineering\r\n- accountant\n");
 }
 
-
-
-
-
-
-//------------------------------------------------------------------------------------------------------------------
-//                                                      OPTIONS
-
-    /*
-    println!("Hello, world!");
-    println!("{number:>width$}", number=111, width=10); // абзац
-    println!("{number:->width$}", number=1, width=10); // заполнение символами
-    println!("My name is {0}, {1} {0}", "Bond", "James"); // поочередный вывод значений
-
-    let s: char = '"';
-    println!("Enter {0}text{0}", s);
-    */
+// ---commands in line---
